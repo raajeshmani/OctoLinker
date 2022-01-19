@@ -33,14 +33,14 @@ export default class Form extends Component {
   }
 
   async validateToken() {
-    const { githubToken } = this.state;
+    const { githubToken, githubEnterpriseToken } = this.state;
 
     if (!this.tokenInputEl) {
       this.tokenInputEl = document.querySelector('.js-token');
     }
     this.tokenInputEl.setCustomValidity('');
 
-    if (!githubToken) {
+    if (!githubToken && !githubEnterpriseToken) {
       this.setState({
         errorMessage: undefined,
         tokenLoaded: false,
@@ -48,6 +48,7 @@ export default class Form extends Component {
 
       storage.save({
         githubToken: '',
+        githubEnterpriseToken: ''
       });
       return;
     }
@@ -56,15 +57,25 @@ export default class Form extends Component {
       headers: { Authorization: `token ${githubToken}` },
     }).then((res) => res.json());
 
-    if (!response.login) {
+    const enterpriseResponse = await fetch('https://github.cerner.com/api/v3/user', {
+      headers: { Authorization: `token ${githubEnterpriseToken}` },
+    }).then((res) => res.json());
+
+    console.log("OctoLinker - Response", response, enterpriseResponse);
+
+    if (!response.login && !enterpriseResponse.login) {
       this.setState({
         tokenLoaded: false,
       });
 
       let message = 'The token could not be validated';
       if (
-        response.message &&
-        response.message.toLowerCase() === 'bad credentials'
+        ( response.message &&
+        response.message.toLowerCase() === 'bad credentials' ) ||
+        (
+          enterpriseResponse.message &&
+          enterpriseResponse.message.toLowerCase() === 'bad credentials'
+        )
       ) {
         message = 'Your token is not valid';
       }
@@ -81,6 +92,7 @@ export default class Form extends Component {
 
     storage.save({
       githubToken,
+      githubEnterpriseToken
     });
   }
 
@@ -105,6 +117,19 @@ export default class Form extends Component {
             error={errorMessage}
             onInput={(event) => {
               linkState(this, 'githubToken')(event);
+              setTimeout(this.validateToken.bind(this), 100);
+            }}
+          />
+          <Input
+            type="password"
+            name="githubEnterpriseToken"
+            className="js-token-enterprise"
+            label="Enterprise Access token"
+            description={githubTokenDescription()}
+            value={state.githubEnterpriseToken}
+            error={errorMessage}
+            onInput={(event) => {
+              linkState(this, 'githubEnterpriseToken')(event);
               setTimeout(this.validateToken.bind(this), 100);
             }}
           />
