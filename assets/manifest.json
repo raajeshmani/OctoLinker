@@ -28,6 +28,7 @@
     {
       "matches": [
         "https://github.com/*",
+        "https://github.cerner.com/*",
         "https://gist.github.com/*"
       ],
       "js": [
@@ -38,6 +39,7 @@
   "permissions": [
     "storage",
     "https://github.com/",
+    "https://github.cerner.com/",
     "https://api.github.com/",
     "https://gist.github.com/",
     "https://octolinker-api.now.sh/"
