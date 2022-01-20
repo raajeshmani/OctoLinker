@@ -1,5 +1,6 @@
 import ghParse from 'github-url-parse';
 
+const CURRENT_URL = window.location.href;
 const BASE_URL = 'https://github.com';
 
 function isURL(str) {
@@ -18,7 +19,7 @@ const internal = (url) => {
 
   return {
     type: 'internal-link',
-    url: fullUrl,
+    url: url.replace('{BASE_URL}', 'https://' + new URL(CURRENT_URL.replace(/[^/]*$/, '')).hostname),
     user,
     repo,
     branch,

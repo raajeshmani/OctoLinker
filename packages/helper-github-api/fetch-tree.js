@@ -3,17 +3,18 @@ import rateLimitNotification from '@octolinker/ratelimit-notification';
 
 export default async function ({ user, repo, branch }) {
   const token = storage.get('githubToken');
+  const enterpriseToken = storage.get('githubEnterpriseToken');
 
   const headers = {
     Accept: 'application/vnd.github.v3+json',
   };
 
-  if (token) {
-    headers.Authorization = `token ${token}`;
-  }
-
   let response;
+  let enterpriseResponse;
   try {
+    if (token) {
+      headers.Authorization = `token ${token}`;
+    }
     response = await fetch(
       `https://api.github.com/repos/${user}/${repo}/git/trees/${branch}?recursive=1`,
       {
@@ -21,10 +22,27 @@ export default async function ({ user, repo, branch }) {
         headers,
       },
     );
+
+    if (enterpriseToken) {
+      headers.Authorization = `token ${enterpriseToken}`;
+    }
+    enterpriseResponse = await fetch(
+      `https://github.cerner.com/api/v3/repos/${user}/${repo}/git/trees/${branch}?recursive=1`,
+      {
+        method: 'GET',
+        headers,
+      }
+    )
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error(error);
   }
+  console.log(response);
+  console.log(enterpriseResponse);
+
+  response = response.status === 200 ? response : enterpriseResponse;
+
+  console.log("Final Tree Response", response)
 
   if (!response) return [];
 
